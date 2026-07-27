@@ -1,21 +1,8 @@
 /* Copyright (c) 2023, Julia Desmazes. All rights reserved.
- * 
- * This work is licensed under the Creative Commons Attribution-NonCommercial
- * 4.0 International License. 
- * 
- * This code is provided "as is" without any express or implied warranties. */
-
-/* PCS on the transmission path 
- * 
- * This module does not support a configurable data width,
- * it expects 256b of data from the mac every cycle.
- *
- * The meaning of "lane" is difference for 40g than 10g.
- * In 10g each block had 2x4 lanes, in 40g the xgmii data
- * is composed of 4 lanes of 1 block width. */
+*/ 
 module pcs_tx#(
+	parameter DATA_W = 32,
 	localparam SERDES_W = 32,
-	parameter DATA_W = 64,
 	localparam HEAD_W = 2,
 	localparam BLOCK_W = DATA_W+HEAD_W,
 	localparam KEEP_W = DATA_W/8,
@@ -96,17 +83,8 @@ assign gb_head = sync_head;
 assign gb_nreset = nreset;
 
 // scrambler
-assign scram_v = gb_accept[0];
-
-/* PCS is non blocking in 10G mode
-* The only case where the PCS becomes blocking is when we
-* are adding the alignement marker.
-* And, as there is no alignement marker for 10GBASE and this
-* signal is not expected to be used in this configuration */
-assign marker_v_o = 1'bX;
-
-assign ready_o   = gb_accept[0];
-
+assign scram_v = gb_accept;
+assign ready_o = gb_accept;
 
 /* gearbox */
 gearbox_tx #(
@@ -115,13 +93,10 @@ gearbox_tx #(
 )m_gearbox_tx(
 	.clk(tx_par_clk),
 	.nreset(gb_nreset),
-	.head_i(gb_head[l*HEAD_W+HEAD_W-1:l*HEAD_W]),
-	.data_i(gb_data[l*DATA_W+DATA_W-1:l*DATA_W]),
+	.head_i(gb_head),
+	.data_i(gb_data),
 	.accept_v_o(gb_accept),  
-	.data_o(serdes_data_o[l*DATA_W+DATA_W-1:l*DATA_W])
+	.data_o(serdes_data_o)
 );
 
-`ifdef FORMAL
-
-`endif
 endmodule

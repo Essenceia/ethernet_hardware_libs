@@ -6,4 +6,9 @@ Features:
 - test pattern support on both TX and RX: PRBS9 and PRBS31
 - loopback testing
 - BER check
-- MDIO 
+
+TBD:
+- MDIO
+
+Whishlist: 
+- PRBS7 and/or 13  
