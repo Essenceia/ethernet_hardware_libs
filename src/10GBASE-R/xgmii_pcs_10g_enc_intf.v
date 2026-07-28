@@ -93,7 +93,7 @@ assign start_v_o = start_v_lite & {LANE0_CNT_N{has_data}};
 assign term_v_o  = term_v_lite & ~has_data;
 assign idle_v_o  = idle_v_lite & ~has_data;
 assign err_v_o   = err_v_lite & ~has_data; 
-
+assign keep_o    = xgmii_txc_i;
 `ifdef FORMAL
 logic data_v_f;
 assign data_v_f = start_v_o | term_v_o;
