@@ -48,10 +48,10 @@ logic [XGMII_CTRL_W-1:0] lsb_ctrl_mask;
 logic                    lsb_ctrl_mask_overflow;
 logic [XGMII_CTRL_W-1:0] lsb_ctrl;
 logic                    term_v_lite;
-assign {lsb_ctrl_mask_overflow, lsb_ctrl_mask} = ~xgmii_txc_i + {XGMII_CTRL_W-1{1'b0} , 1'b1};
+assign {lsb_ctrl_mask_overflow, lsb_ctrl_mask} = ~xgmii_txc_i + {{XGMII_CTRL_W-1{1'b0}} , 1'b1};
 always_comb begin
 	for( int i=0; i < XGMII_CTRL_W; i++) begin
-		if( lsb_ctrl_mask[i] ) lsb_ctrl = xgmii_txd_i[i*8+7:i*8];
+		if( lsb_ctrl_mask[i] ) lsb_ctrl = xgmii_txd_i[i*8+7-:8];
 	end
 end
 assign term_v_lite = lsb_ctrl == XGMII_CTRL_TERM;
@@ -71,7 +71,7 @@ assign has_data = ~xgmii_txc_i[XGMII_CTRL_W-1];
 genvar i;
 generate
 	for(i=0; i<LANE0_CNT_N; i++) begin
-		assign lane0_start_v[i] =  xgmii_txd_i[i*4*8+7:i*4*8] == XGMII_CTRL_START;
+		assign lane0_start_v[i] =  xgmii_txd_i[i*4*8+7-:8] == XGMII_CTRL_START;
 	end
 endgenerate
 assign start_v_lite[0] = lane0_start_v[0] & ~lane0_start_v[1];

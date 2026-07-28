@@ -68,10 +68,10 @@ assign ctrl_lane_v[0] = ctrl_v_i & ( start_v_i[0] | err_v_i | term_onehot[0]);
 // When deleting /I/s, the first four characters after a /T/ shall not be deleted.
 genvar i;
 generate
-	for(i=1; i< XGMII_CTRL_W; i++) begin
-		if ( !IS_40G && i == 3 ) begin
+	for(i=1; i< XGMII_CTRL_W; i++) begin : g_xgmii_ctrl
+		if ( !IS_40G && i == 3 ) begin : g_last_10g_lane
 			assign ctrl_lane_v[i] = ctrl_v_i & (start_v_i[1] | term_onehot[i]);
-		end	else begin
+		end	else begin : g_lanes
 			assign ctrl_lane_v[i] = ctrl_v_i & term_onehot[i];
 		end	
 	end

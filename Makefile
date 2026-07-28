@@ -10,14 +10,14 @@ SIM ?= verilator
 ###########
 
 # Global configs.
-PROJET_NAME := tt_um_coldbrew
 FPGA_DIR := fpga
 CONF := conf
 DEBUG_FLAG := $(if $(debug), debug=1)
 DEFINES := $(if $(wave),wave=1)
 WAIVER_FILE := waiver.vlt
+SRC_DIR:= src
+SRC_10GBASE_R := $(SRC_DIR)/10GBASE-R
 
-.PHONY: lint
 
 # Lint #
 ########
@@ -52,10 +52,12 @@ endif
 # Lint #
 ########
 
-entry_deps := $(wildcard $(SRC_DIR)/*.v) $(wildcard $(SRC_DIR)/*.vh)  
+10g_deps := $(wildcard $(SRC_10GBASE_R)/*.v) 
 
-lint: $(entry_deps)
-	$(call LINT,$^,$(PROJET_NAME))
+lint_10g_tx: $(10g_deps)
+	$(call LINT,$^, xgmii_pcs_10g_tx)
+
+.PHONY: lint_10g_tx
 
 #############
 # Testbench #
