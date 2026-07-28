@@ -120,5 +120,5 @@ end
 // buffer is full, tell mac to not send next cycle
 assign accept_v_o = ~fifo_full;
 
-assign data_o = rd_fifo_mask & fifo_q | ~rd_fifo_mask & rd_data_shifted;
+assign data_o = rd_fifo_mask ? fifo_q : rd_data_shifted;
 endmodule

@@ -49,7 +49,9 @@ logic                    lsb_ctrl_mask_overflow;
 logic [XGMII_CTRL_W-1:0] lsb_ctrl;
 logic                    term_v_lite;
 assign {lsb_ctrl_mask_overflow, lsb_ctrl_mask} = ~xgmii_txc_i + {{XGMII_CTRL_W-1{1'b0}} , 1'b1};
-always_comb begin
+
+always @(*) begin
+	lsb_ctrl = 8'h00;
 	for( int i=0; i < XGMII_CTRL_W; i++) begin
 		if( lsb_ctrl_mask[i] ) lsb_ctrl = xgmii_txd_i[i*8+7-:8];
 	end
