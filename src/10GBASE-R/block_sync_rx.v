@@ -24,6 +24,10 @@ module block_sync_rx#(
 	input clk,
 	input nreset, 
 
+	// MDIO
+	input              ber_test_i, // start test, pulse
+	output             hi_ber_o,
+
 	// SerDes
 	input              signal_v_i, // signal_ok
 
@@ -40,7 +44,6 @@ localparam CNT_N = 1024;
 localparam CNT_W = $clog2(CNT_N);
 localparam NV_CNT_N = 65;
 localparam NV_CNT_W = $clog2(NV_CNT_N);
-
 /* fsm */
 reg   invalid_q;
 logic invalid_next;
@@ -120,9 +123,63 @@ always @(posedge clk) begin
 	end
 end
 
+/* BER monitor */
+localparam BER_TIME_CNT_N = 19531;// 125us counter, count number of blocks
+localparam BER_TIME_CNT_W = $clog2(BER_TIME_CNT_N);
+localparam [BER_TIME_CNT_W-1:0] BER_TIME_CNT = BER_TIME_CNT_N-1;
+
+localparam BER_CNT_N = 16;
+localparam BER_CNT_W = $clog2(BER_CNT_N);
+
+localparam BER_FSM_START_TIMER = 2'd0;
+localparam BER_FSM_TEST_SH     = 2'd1;
+reg [1:0] ber_fsm_q; 
+
+wire rst_ber;
+reg  hi_ber_q; 
+reg  hi_ber_sticky_q;
+wire hi_ber_next;
+reg  [BER_CNT_W-1:0] ber_cnt_q;
+wire [BER_CNT_W-1:0] ber_cnt_next;
+wire                 ber_cnt_next_overflow;
+reg [BER_TIME_CNT_W-1:0] ber_timer_q; 
+
+assign rst_ber = ~nreset | lock_q | ber_test_i; 
+
+always @(posedge clk) begin
+	if ( rst_ber ) begin
+		ber_fsm_q <= BER_FSM_START_TIMER; 
+	end else
+		case(ber_fsm_q)
+			BER_FSM_START_TIMER: begin
+				ber_fsm_q   <= BER_FSM_TEST_SH;
+				ber_timer_q <= {BER_TIME_CNT_W{1'b0}};
+				ber_cnt_q   <= {BER_CNT_W{1'b0}}; 
+			end
+			BER_FSM_TEST_SH: begin
+				ber_fsm_q   <= ber_timer_q == BER_TIME_CNT ? BER_FSM_START_TIMER: BER_FSM_TEST_SH; 
+				ber_timer_q <= ber_timer_q + {{BER_TIME_CNT_W-1{1'b0}}, 1'b1};
+				ber_cnt_q   <= ber_cnt_next;
+			end
+		endcase
+	end
+end
+
+assign {ber_cnt_next_overflow, ber_cnt_next} = ber_cnt_q + {{BER_CNT_W-1{1'b0}}, ~sh_v};
+
+always @(posedge clk) 
+	if (rst_ber | ber_fsm_q == BER_FSM_START_TIMER) hi_ber_sticky_q <= 1'b0;
+	else hi_ber_sticky_q <= hi_ber_sticky_q | ber_cnt_next_overflow; 
+
+always @(posedge clk) 
+	if (rst_ber) hi_ber_q <= 1'b0;
+	else if (ber_fsm_q == BER_FSM_START_TIMER) hi_ber_q <= hi_ber_sticky_q;  
+
 // output
 assign lock_v_o = lock_q; 
 assign slip_v_o = valid_i & slip_v;
+assign hi_ber_o = hi_ber_q; 
+
 
 `ifdef FORMAL
 logic f_fsm;
