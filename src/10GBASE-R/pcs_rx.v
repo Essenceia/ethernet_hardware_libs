@@ -21,6 +21,9 @@ module pcs_rx #(
 	input [LANE_N-1:0] rx_par_clk,
 	input nreset,
 
+	input                      ber_test_i,
+	output [LANE_N-1:0]        hi_ber_o, 
+
 	/* SerDes */
     input  [LANE_N-1:0]        serdes_lock_v_i,
     input  [LANE_N*DATA_W-1:0] serdes_data_i,
@@ -104,6 +107,8 @@ for(l=0; l<LANE_N; l++)begin : gen_gearbox_block_sync_loop
 	m_bs_rx(
 		.clk(rx_par_clk[l]),
 		.nreset(nreset),
+		.ber_test_i(ber_test_i),
+		.hi_ber_o(hi_ber_o[l]),
 		.signal_v_i(serdes_signal_v[l]),
 		.valid_i(gb_data_v[l]),
 		.head_i(gb_head[l]),

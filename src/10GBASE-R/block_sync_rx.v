@@ -149,7 +149,7 @@ assign rst_ber = ~nreset | lock_q | ber_test_i;
 always @(posedge clk) begin
 	if ( rst_ber ) begin
 		ber_fsm_q <= BER_FSM_START_TIMER; 
-	end else
+	end else begin
 		case(ber_fsm_q)
 			BER_FSM_START_TIMER: begin
 				ber_fsm_q   <= BER_FSM_TEST_SH;
